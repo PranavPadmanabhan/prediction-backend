@@ -10,12 +10,10 @@ router.get("/", async (req, res) => {
   const lastTimestamp = await contract?.getLatestTimeStamp();
   const timestamp = parseInt(lastTimestamp.toString());
   const startingNumber = parseInt(lastRoundPlayers.toString());
-  // console.log(startingNumber);
 
   if (req.query.contestId) {
     let predictions = await contract?.getPredictions(req.query.contestId);
     let result = predictions.filter((item, i) => i >= startingNumber);
-    console.log(result.toString());
     res.status(200).json(
       result.map((item) => ({
         predictedValue: item.predictedValue.toString(),
