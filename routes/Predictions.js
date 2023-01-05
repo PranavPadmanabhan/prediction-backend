@@ -8,9 +8,11 @@ router.get("/", async (req, res) => {
   const round = await contract?.getContestRound();
   const startingNumber =
     parseInt(maxPlayers.toString()) * parseInt(round.toString());
-  let response = [];
+
   if (req.query.contestId) {
+    let response = [];
     const predictions = await contract?.getPredictions(req.query.contestId);
+    // console.log(predictions.toString());
     for (let i = startingNumber; i < predictions.length; i++) {
       response.push({
         predictedValue: parseFloat(predictions[i].predictedValue.toString()),
@@ -19,7 +21,14 @@ router.get("/", async (req, res) => {
         difference: parseFloat(predictions[i].difference.toString()),
       });
     }
-    res.status(200).json(response);
+    res.status(200).json(
+      predictions.map((item) => ({
+        predictedValue: parseFloat(item.predictedValue.toString()),
+        predictedAt: parseInt(item.predictedAt.toString()),
+        user: item.user.toString(),
+        difference: parseFloat(item.difference.toString()),
+      }))
+    );
   } else {
     res.status(404).json({ error: "error" });
   }
