@@ -7,21 +7,23 @@ router.get("/", async (req, res) => {
   const lastRoundPlayers = await contract?.getContestPlayers(
     req.query.contestId
   );
+  const lastTimestamp = await contract?.getLatestTimeStamp();
+  const timestamp = parseInt(lastTimestamp.toString());
   const startingNumber = parseInt(lastRoundPlayers.toString());
+  // console.log(startingNumber);
 
   if (req.query.contestId) {
     let predictions = await contract?.getPredictions(req.query.contestId);
-    predictions = predictions.map((item, i) => {
-      if (i >= startingNumber) {
-        return {
-          predictedValue: parseFloat(item.predictedValue.toString()),
-          predictedAt: parseInt(item.predictedAt.toString()),
-          user: item.user.toString(),
-          difference: parseFloat(item.difference.toString()),
-        };
-      }
-    });
-    res.status(200).json(predictions);
+    let result = predictions.filter((item, i) => i >= startingNumber);
+    console.log(result.toString());
+    res.status(200).json(
+      result.map((item) => ({
+        predictedValue: item.predictedValue.toString(),
+        predictedAt: item.predictedAt.toString(),
+        user: item.user.toString(),
+        difference: item.difference.toString(),
+      }))
+    );
   } else {
     res.status(404).json({ error: "error" });
   }
