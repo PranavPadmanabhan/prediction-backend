@@ -34,25 +34,27 @@ router.get("/", async (req, res) => {
   setRewardArray();
   const contract = await getPredictionContract(false);
   const maxPlayers = await contract?.getNumOfMaxPlayers();
-  const round = await contract?.getContestRound();
-  const startingNumber =
-    parseInt(maxPlayers.toString()) * parseInt(round.toString());
-  let predictions = [];
+  const lastRoundPlayers = await contract?.getContestPlayers(
+    req.query.contestId
+  );
+  const startingNumber = parseInt(lastRoundPlayers.toString());
   if (req.query.contestId) {
+    let predictions = await contract?.getPredictions(req.query.contestId);
     const priceData = await contract?.getLatestPrice(req.query.contestId);
     const currentPrice =
       parseInt(priceData[0].toString()) /
       10 ** parseInt(priceData[1].toString());
     console.log(currentPrice);
-    const data = await contract?.getPredictions(req.query.contestId);
-    for (let i = startingNumber; i < data.length; i++) {
-      predictions.push({
-        predictedValue: parseFloat(data[i].predictedValue.toString()),
-        predictedAt: parseInt(data[i].predictedAt.toString()) * 1000,
-        user: data[i].user.toString(),
-        difference: parseFloat(data[i].difference.toString()),
-      });
-    }
+    predictions = predictions.map((item, i) => {
+      if (i >= startingNumber) {
+        return {
+          predictedValue: parseFloat(item.predictedValue.toString()),
+          predictedAt: parseInt(item.predictedAt.toString()),
+          user: item.user.toString(),
+          difference: parseFloat(item.difference.toString()),
+        };
+      }
+    });
 
     for (let i = 0; i < predictions.length; i++) {
       if (currentPrice > predictions[i].predictedValue) {
