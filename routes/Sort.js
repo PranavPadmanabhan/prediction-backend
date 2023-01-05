@@ -1,9 +1,6 @@
 const router = require("express").Router();
 const { getPredictionContract } = require("../utils/helper-functions");
 const { array } = require("../constants/constants");
-const User = require("../models/User");
-const Contests = require("../models/Contest");
-const { default: mongoose } = require("mongoose");
 const { ethers } = require("ethers");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -16,103 +13,89 @@ let rewardList = [];
 function setRewardArray() {
   for (let i = 0; i < 100; i++) {
     if (i < 3) {
-      rewardList.push(array[i]);
+      rewardList.push(ethers.utils.parseEther(array[i].toString()));
     } else if (i >= 3 && i < 6) {
-      rewardList.push(array[3]);
+      rewardList.push(ethers.utils.parseEther(array[3].toString()));
     } else if (i >= 7 && i < 10) {
-      rewardList.push(array[4]);
+      rewardList.push(ethers.utils.parseEther(array[4].toString()));
     } else if (i >= 10 && i < 15) {
-      rewardList.push(array[5]);
+      rewardList.push(ethers.utils.parseEther(array[5].toString()));
     } else if (i >= 16 && i < 25) {
-      rewardList.push(array[6]);
+      rewardList.push(ethers.utils.parseEther(array[6].toString()));
     } else if (i >= 26 && i < 50) {
-      rewardList.push(array[7]);
+      rewardList.push(ethers.utils.parseEther(array[7].toString()));
     } else {
-      rewardList.push(array[8]);
+      rewardList.push(ethers.utils.parseEther(array[8].toString()));
     }
   }
 }
 
 router.get("/", async (req, res) => {
-  if (req.query.contestId && mongoose.ConnectionStates.connected) {
-    setRewardArray();
-    const contract = await getPredictionContract();
-    const data = await contract?.getPredictions(req.query.contestId);
-    const tx = await contract?.predict(1, 1999);
-    console.log(tx);
-    const numOfMaxPlayers = await contract?.getNumOfMaxPlayers();
-    console.log(`max players = ${parseInt(numOfMaxPlayers.toString())}`);
-    const currentPriceData = await contract?.getLatestPrice(
-      req.query.contestId
-    );
+  setRewardArray();
+  const contract = await getPredictionContract(false);
+  const maxPlayers = await contract?.getNumOfMaxPlayers();
+  const round = await contract?.getContestRound();
+  const startingNumber =
+    parseInt(maxPlayers.toString()) * parseInt(round.toString());
+  let predictions = [];
+  if (req.query.contestId) {
+    const priceData = await contract?.getLatestPrice(req.query.contestId);
     const currentPrice =
-      parseInt(currentPriceData[0].toString()) / 10 ** currentPriceData[1];
+      parseInt(priceData[0].toString()) /
+      10 ** parseInt(priceData[1].toString());
     console.log(currentPrice);
-    let predictions = [];
-    const contest = await Contests.findOne({
-      contestId: parseInt(req.query.contestId.toString()),
-    });
-    contest.predictions.map((item) => {
+    const data = await contract?.getPredictions(req.query.contestId);
+    for (let i = startingNumber; i < data.length; i++) {
       predictions.push({
-        predictedValue: parseFloat(item.predictedValue.toString()),
-        user: item.user.toString(),
-        predictedAt: parseInt(item.predictedAt.toString()),
-        difference: parseFloat(item.difference.toString()),
+        predictedValue: parseFloat(data[i].predictedValue.toString()),
+        predictedAt: parseInt(data[i].predictedAt.toString()) * 1000,
+        user: data[i].user.toString(),
+        difference: parseFloat(data[i].difference.toString()),
       });
-    });
+    }
 
-    if (predictions.length < parseInt(numOfMaxPlayers.toString())) {
-      const entranceFee = await contract.getEntranceFee();
-      const fee = parseFloat(
-        ethers.utils.formatEther(entranceFee.toString()).toString()
-      );
-      for (let i = 0; i < predictions.length; i++) {
-        const user = await User.findOne({
-          address: predictions[i].user.toLowerCase(),
-        });
-        const newBalance = user.walletBalance + fee;
-        user.walletBalance = newBalance;
-        contest.predictions = [];
-        await user.save();
-        await contest.save();
-      }
-    } else {
-      for (let i = 0; i < predictions.length; i++) {
-        if (currentPrice > predictions[i].predictedValue) {
-          predictions[i].difference =
-            currentPrice - predictions[i].predictedValue;
-        } else {
-          predictions[i].difference =
-            predictions[i].predictedValue - currentPrice;
-        }
-      }
-      for (let i = 0; i < predictions.length; i++) {
-        if (
-          i + 1 <= predictions.length - 1 &&
-          (predictions[i].difference > predictions[i + 1].difference ||
-            (predictions[i].difference === predictions[i + 1].difference &&
-              predictions[i].predictedAt > predictions[i + 1].difference))
-        ) {
-          let temp = predictions[i];
-          predictions[i] = predictions[i + 1];
-          predictions[i + 1] = temp;
-        }
-      }
-
-      for (let i = 0; i < predictions.length; i++) {
-        const user = await User.findOne({
-          address: predictions[i].user.toLowerCase(),
-        });
-        const newBalance = user.walletBalance + rewardList[i];
-        user.walletBalance = newBalance;
-        await user.save();
-        contest.predictions = [];
-        await contest.save();
+    for (let i = 0; i < predictions.length; i++) {
+      if (currentPrice > predictions[i].predictedValue) {
+        predictions[i].difference =
+          currentPrice - predictions[i].predictedValue;
+      } else {
+        predictions[i].difference =
+          predictions[i].predictedValue - currentPrice;
       }
     }
-    res.status(200).json({
-      predictions: predictions,
+
+    let differences = predictions.map((item) => item.difference);
+    differences = differences.sort();
+
+    let result = [];
+    predictions.map((item) => {
+      let index = differences.indexOf(item.difference);
+      result[index] = item;
     });
+
+    const addresses = result.map((item) => item.user);
+
+    if (predictions.length > 0) {
+      const predictionContract = await getPredictionContract(true);
+      const tx = await predictionContract?.automateResult(
+        addresses,
+        rewardList,
+        {
+          gasLimit: 10000000,
+        }
+      );
+      const rec = await tx.wait(1);
+      const { gasUsed, effectiveGasPrice } = rec;
+      console.log(
+        ethers.utils
+          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+          .toString()
+      );
+    }
+
+    res.status(200).json(result);
+  } else {
+    res.status(404).json({ error: "error" });
   }
 });
 
