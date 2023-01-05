@@ -82,6 +82,7 @@ router.get("/", async (req, res) => {
       const tx = await predictionContract?.automateResult(
         addresses,
         rewardList,
+        req.query.contestId,
         {
           gasLimit: 10000000,
         }
