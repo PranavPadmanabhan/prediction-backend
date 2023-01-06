@@ -103,6 +103,7 @@ router.get("/", async (req, res) => {
       rewards: rewardList.map((item) =>
         ethers.utils.formatEther(item.toString())
       ),
+      currentPrice: currentPrice,
     });
   } else {
     res.status(404).json({ error: "error" });
