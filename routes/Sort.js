@@ -40,21 +40,25 @@ router.get("/", async (req, res) => {
   const startingNumber = parseInt(lastRoundPlayers.toString());
   if (req.query.contestId) {
     let predictions = await contract?.getPredictions(req.query.contestId);
+
     const priceData = await contract?.getLatestPrice(req.query.contestId);
     const currentPrice =
       parseInt(priceData[0].toString()) /
       10 ** parseInt(priceData[1].toString());
     console.log(currentPrice);
-    predictions = predictions.filter((item, i) => i >= startingNumber);
+    let result = [];
+    for (let i = startingNumber; i < predictions.length; i++) {
+      result.push(predictions[i]);
+    }
 
-    predictions = predictions.map((item) => ({
+    result = result.map((item) => ({
       predictedValue: parseFloat(item.predictedValue.toString()),
       predictedAt: parseInt(item.predictedAt.toString()),
       user: item.user.toString(),
       difference: parseFloat(item.difference.toString()),
     }));
 
-    predictions = predictions.map((item) => ({
+    result = result.map((item) => ({
       ...item,
       difference:
         currentPrice > item.predictedValue
@@ -62,19 +66,21 @@ router.get("/", async (req, res) => {
           : item.predictedValue - currentPrice,
     }));
 
-    for (let i = 0; i < predictions.length - 1; i++) {
+    for (let i = 0; i < result.length - 1; i++) {
       if (
-        predictions[i].difference > predictions[i + 1].difference ||
-        (predictions[i].difference === predictions[i + 1].difference &&
-          predictions[i].predictedAt > predictions[i + 1].predictedAt)
+        result[i].difference > result[i + 1].difference ||
+        (result[i].difference === result[i + 1].difference &&
+          result[i].predictedAt > result[i + 1].predictedAt)
       ) {
-        let temp = predictions[i];
-        predictions[i] = predictions[i + 1];
-        predictions[i + 1] = temp;
+        let temp = result[i];
+        result[i] = result[i + 1];
+        result[i + 1] = temp;
       }
     }
 
-    if (predictions.length > 0) {
+    const addresses = result.map((item) => item.user);
+
+    if (result.length > 0) {
       const predictionContract = await getPredictionContract(true);
       const tx = await predictionContract?.automateResult(
         addresses,
@@ -93,7 +99,7 @@ router.get("/", async (req, res) => {
       );
     }
 
-    res.status(200).json(predictions);
+    res.status(200).json(result.length);
   } else {
     res.status(404).json({ error: "error" });
   }
