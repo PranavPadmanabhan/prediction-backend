@@ -95,7 +95,9 @@ router.get("/", async (req, res) => {
         user: item.user.toString(),
         difference: item.difference.toString(),
       })),
-      rewards: rewardList,
+      rewards: rewardList.map((item) =>
+        ethers.utils.formatEther(item.toString())
+      ),
     });
   } else {
     res.status(404).json({ error: "error" });
