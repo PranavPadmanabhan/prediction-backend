@@ -47,15 +47,20 @@ router.get("/", async (req, res) => {
     console.log(currentPrice);
     predictions = predictions.filter((item, i) => i >= startingNumber);
 
-    for (let i = 0; i < predictions.length; i++) {
-      if (currentPrice > predictions[i].predictedValue) {
-        predictions[i].difference =
-          currentPrice - predictions[i].predictedValue;
-      } else {
-        predictions[i].difference =
-          predictions[i].predictedValue - currentPrice;
-      }
-    }
+    predictions = predictions.map((item) => ({
+      predictedValue: parseFloat(item.predictedValue.toString()),
+      predictedAt: parseInt(item.predictedAt.toString()),
+      user: item.user.toString(),
+      difference: parseFloat(item.difference.toString()),
+    }));
+
+    predictions = predictions.map((item) => ({
+      ...item,
+      difference:
+        currentPrice > item.predictedValue
+          ? currentPrice - item.predictedValue
+          : item.predictedValue - currentPrice,
+    }));
 
     let differences = predictions.map((item) => item.difference);
     differences = differences.sort();
