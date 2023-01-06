@@ -62,49 +62,28 @@ router.get("/", async (req, res) => {
           : item.predictedValue - currentPrice,
     }));
 
-    let differences = predictions.map((item) => item.difference);
-    differences = differences.sort();
+    predictions = predictions.sort((a, b) => a.difference < b.difference);
 
-    let result = [];
-    predictions.map((item) => {
-      let index = differences.indexOf(item.difference);
-      result[index] = item;
-      console.log(result[index].toString());
-    });
+    // if (predictions.length > 0) {
+    //   const predictionContract = await getPredictionContract(true);
+    //   const tx = await predictionContract?.automateResult(
+    //     addresses,
+    //     rewardList,
+    //     req.query.contestId,
+    //     {
+    //       gasLimit: 10000000,
+    //     }
+    //   );
+    //   const rec = await tx.wait(1);
+    //   const { gasUsed, effectiveGasPrice } = rec;
+    //   console.log(
+    //     ethers.utils
+    //       .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+    //       .toString()
+    //   );
+    // }
 
-    const addresses = result.map((item) => item.user);
-
-    if (predictions.length > 0) {
-      const predictionContract = await getPredictionContract(true);
-      const tx = await predictionContract?.automateResult(
-        addresses,
-        rewardList,
-        req.query.contestId,
-        {
-          gasLimit: 10000000,
-        }
-      );
-      const rec = await tx.wait(1);
-      const { gasUsed, effectiveGasPrice } = rec;
-      console.log(
-        ethers.utils
-          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
-          .toString()
-      );
-    }
-
-    res.status(200).json({
-      results: result.map((item) => ({
-        predictedValue: item.predictedValue.toString(),
-        predictedAt: item.predictedAt.toString(),
-        user: item.user.toString(),
-        difference: item.difference.toString(),
-      })),
-      rewards: rewardList.map((item) =>
-        ethers.utils.formatEther(item.toString())
-      ),
-      currentPrice: currentPrice,
-    });
+    res.status(200).json(predictions);
   } else {
     res.status(404).json({ error: "error" });
   }
