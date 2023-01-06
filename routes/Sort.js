@@ -64,6 +64,7 @@ router.get("/", async (req, res) => {
     predictions.map((item) => {
       let index = differences.indexOf(item.difference);
       result[index] = item;
+      console.log(result[index].toString());
     });
 
     const addresses = result.map((item) => item.user);
@@ -87,7 +88,15 @@ router.get("/", async (req, res) => {
       );
     }
 
-    res.status(200).json(result);
+    res.status(200).json({
+      results: result.map((item) => ({
+        predictedValue: item.predictedValue.toString(),
+        predictedAt: item.predictedAt.toString(),
+        user: item.user.toString(),
+        difference: item.difference.toString(),
+      })),
+      rewards: rewardList,
+    });
   } else {
     res.status(404).json({ error: "error" });
   }
