@@ -7,6 +7,7 @@ const predictionRoute = require("./routes/Predictions");
 const Sort = require("./routes/Sort");
 // const Price = require("./routes/LatestPrice");
 const http = require("http");
+const { default: mongoose } = require("mongoose");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -38,4 +39,13 @@ app.use("/getResult", Sort);
 
 server.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  // mongoose
+  //   .connect(process.env.MONGO_DB_URL, {
+  //     useNewUrlParser: true,
+  //     useUnifiedTopology: true,
+  //   })
+  //   .then(() => {
+  //     console.log("MongoDb connection successfull");
+  //   })
+  //   .catch((err) => console.log(err));
 });

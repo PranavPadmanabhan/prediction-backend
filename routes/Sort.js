@@ -62,26 +62,36 @@ router.get("/", async (req, res) => {
           : item.predictedValue - currentPrice,
     }));
 
-    predictions = predictions.sort((a, b) => a.difference < b.difference);
+    for (let i = 0; i < predictions.length - 1; i++) {
+      if (
+        predictions[i].difference > predictions[i + 1].difference ||
+        (predictions[i].difference === predictions[i + 1].difference &&
+          predictions[i].predictedAt > predictions[i + 1].predictedAt)
+      ) {
+        let temp = predictions[i];
+        predictions[i] = predictions[i + 1];
+        predictions[i + 1] = temp;
+      }
+    }
 
-    // if (predictions.length > 0) {
-    //   const predictionContract = await getPredictionContract(true);
-    //   const tx = await predictionContract?.automateResult(
-    //     addresses,
-    //     rewardList,
-    //     req.query.contestId,
-    //     {
-    //       gasLimit: 10000000,
-    //     }
-    //   );
-    //   const rec = await tx.wait(1);
-    //   const { gasUsed, effectiveGasPrice } = rec;
-    //   console.log(
-    //     ethers.utils
-    //       .formatEther(gasUsed.mul(effectiveGasPrice).toString())
-    //       .toString()
-    //   );
-    // }
+    if (predictions.length > 0) {
+      const predictionContract = await getPredictionContract(true);
+      const tx = await predictionContract?.automateResult(
+        addresses,
+        rewardList,
+        req.query.contestId,
+        {
+          gasLimit: 10000000,
+        }
+      );
+      const rec = await tx.wait(1);
+      const { gasUsed, effectiveGasPrice } = rec;
+      console.log(
+        ethers.utils
+          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+          .toString()
+      );
+    }
 
     res.status(200).json(predictions);
   } else {
