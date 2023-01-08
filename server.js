@@ -6,6 +6,8 @@ const cors = require("cors");
 const predictionRoute = require("./routes/Predictions");
 const Sort = require("./routes/Sort");
 // const Price = require("./routes/LatestPrice");
+const Predict = require("./routes/predict");
+
 const http = require("http");
 const { default: mongoose } = require("mongoose");
 
@@ -34,6 +36,7 @@ app.use(urlencoded({ extended: false }));
 app.use("/predictions", predictionRoute);
 app.use("/getResult", Sort);
 // app.use("/latestPrice", Price);
+app.use("/predict", Predict);
 
 /// listening to changes
 
