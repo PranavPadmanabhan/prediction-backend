@@ -80,9 +80,16 @@ router.get("/", async (req, res) => {
     });
 
     const addresses = predictions.map((item) => item.user);
+    const predictionContract = await getPredictionContract(true);
+    const balance = parseFloat(
+      ethers.utils
+        .formatEther(
+          await (await predictionContract.signer.getBalance()).toString()
+        )
+        .toString()
+    );
 
-    if (addresses.length > 0) {
-      const predictionContract = await getPredictionContract(true);
+    if (addresses.length > 0 && balance >= 0.005) {
       const tx = await predictionContract?.automateResult(
         addresses,
         rewardList,
