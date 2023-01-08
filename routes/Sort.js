@@ -33,54 +33,55 @@ function setRewardArray() {
 router.get("/", async (req, res) => {
   setRewardArray();
   const contract = await getPredictionContract(false);
-  const maxPlayers = await contract?.getNumOfMaxPlayers();
-  const lastRoundPlayers = await contract?.getContestPlayers(
-    req.query.contestId
-  );
-  const startingNumber = parseInt(lastRoundPlayers.toString());
+  const lastNum = await contract.getContestPlayers(req.query.contestId);
+  const startingNumber = parseInt(lastNum.toString());
+  const priceData = await contract.getLatestPrice(req.query.contestId);
+  const currentPrice =
+    parseInt(priceData[0].toString()) / 10 ** parseInt(priceData[1].toString());
   if (req.query.contestId) {
-    let predictions = await contract?.getPredictions(req.query.contestId);
-
-    const priceData = await contract?.getLatestPrice(req.query.contestId);
-    const currentPrice =
-      parseInt(priceData[0].toString()) /
-      10 ** parseInt(priceData[1].toString());
-    console.log(currentPrice);
-    let result = [];
-    for (let i = startingNumber; i < predictions.length; i++) {
-      result.push(predictions[i]);
-    }
-
-    result = result.map((item) => ({
+    const data = await contract.getPredictions(req.query.contestId);
+    let predictions = data.map((item) => ({
       predictedValue: parseFloat(item.predictedValue.toString()),
-      predictedAt: parseInt(item.predictedAt.toString()),
+      predictedAt: parseInt(item.predictedAt.toString()) * 1000,
       user: item.user.toString(),
       difference: parseFloat(item.difference.toString()),
     }));
 
-    result = result.map((item) => ({
-      ...item,
-      difference:
-        currentPrice > item.predictedValue
-          ? currentPrice - item.predictedValue
-          : item.predictedValue - currentPrice,
-    }));
+    predictions = predictions.filter((item, i) => {
+      if (i >= startingNumber) {
+        return item;
+      }
+    });
 
-    for (let i = 0; i < result.length - 1; i++) {
-      if (
-        result[i].difference > result[i + 1].difference ||
-        (result[i].difference === result[i + 1].difference &&
-          result[i].predictedAt > result[i + 1].predictedAt)
-      ) {
-        let temp = result[i];
-        result[i] = result[i + 1];
-        result[i + 1] = temp;
+    for (let i = 0; i < predictions.length; i++) {
+      if (currentPrice > predictions[i].predictedValue) {
+        predictions[i].difference =
+          currentPrice - predictions[i].predictedValue;
+      } else {
+        predictions[i].difference =
+          predictions[i].predictedValue - currentPrice;
       }
     }
 
-    const addresses = result.map((item) => item.user);
+    predictions = predictions.sort((a, b) => {
+      if (
+        a.difference > b.difference ||
+        (a.difference === b.difference && a.predictedAt > b.predictedAt)
+      ) {
+        return 1;
+      } else if (
+        a.difference < b.difference ||
+        (a.difference === b.difference && a.predictedAt < b.predictedAt)
+      ) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
 
-    if (result.length > 0) {
+    const addresses = predictions.map((item) => item.user);
+
+    if (addresses.length > 0) {
       const predictionContract = await getPredictionContract(true);
       const tx = await predictionContract?.automateResult(
         addresses,
@@ -99,7 +100,7 @@ router.get("/", async (req, res) => {
       );
     }
 
-    res.status(200).json(result.length);
+    res.status(200).json(predictions);
   } else {
     res.status(404).json({ error: "error" });
   }
