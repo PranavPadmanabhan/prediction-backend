@@ -5,7 +5,6 @@ const session = require("express-session");
 const cors = require("cors");
 const predictionRoute = require("./routes/Predictions");
 const Sort = require("./routes/Sort");
-const encrypt = require("./routes/encryptKey");
 
 // const Price = require("./routes/LatestPrice");
 const Predict = require("./routes/predict");
@@ -39,7 +38,6 @@ app.use("/predictions", predictionRoute);
 app.use("/getResult", Sort);
 // app.use("/latestPrice", Price);
 app.use("/predict", Predict);
-app.use("/encrypt", encrypt);
 
 /// listening to changes
 
