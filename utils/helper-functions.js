@@ -1,41 +1,25 @@
 const ethers = require("ethers");
 const { contractAddress, ABI } = require("../constants/constants");
 const dotenv = require("dotenv");
-var ne = require("node-encrypt");
+var CryptoJS = require("crypto-js");
 
 dotenv.config();
 
-let Key;
-let GOERLI_RPC_URL;
-let CONTRACT_ADDRESS;
+const decrypt = (value) => {
+  var bytes = CryptoJS.AES.decrypt(value, process.env.ENCRYPTION_KEY);
+  var originalText = bytes.toString(CryptoJS.enc.Utf8);
+  return originalText;
+};
+
 const getPredictionContract = async (signerRequired = false) => {
-  // console.log(contractAddress[chainId]);
-  ne.decrypt(
-    { cipher: process.env.PRIVATE_KEY, key: process.env.ENCRYPTION_KEY },
-    (err, plaintext) => {
-      console.log(plaintext);
-      Key = plaintext;
-    }
-  );
-  ne.decrypt(
-    { cipher: process.env.GOERLI_RPC_URL, key: process.env.ENCRYPTION_KEY },
-    (err, plaintext) => {
-      console.log(plaintext);
-      GOERLI_RPC_URL = plaintext;
-    }
-  );
-  ne.decrypt(
-    { cipher: process.env.CONTRACT_ADDRESS, key: process.env.ENCRYPTION_KEY },
-    (err, plaintext) => {
-      console.log(plaintext);
-      CONTRACT_ADDRESS = plaintext;
-    }
-  );
+  // console.log(contractAddress[ch ainId]);
+  const CONTRACT_ADDRESS = decrypt(process.env.CONTRACT_ADDRESS_ENCRYPTED);
+  const PRIVATE_KEY = decrypt(process.env.PRIVATE_KEY_ENCRYPTED);
+  const GOERLI_RPC_URL = decrypt(process.env.GOERLI_RPC_URL_ENCRYPTED);
   const provider = new ethers.providers.WebSocketProvider(GOERLI_RPC_URL);
 
   if (signerRequired) {
-    const signer = new ethers.Wallet(Key, provider);
-
+    const signer = new ethers.Wallet(PRIVATE_KEY, provider);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     return contract;
   } else {
