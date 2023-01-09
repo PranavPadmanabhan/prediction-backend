@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node server.js"
+    "server": "nodemon server.js"
   },
   "author": "pranav",
   "license": "MIT",
@@ -17,6 +17,7 @@
     "cookie-session": "^2.0.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
+    "cryptr": "^6.1.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",

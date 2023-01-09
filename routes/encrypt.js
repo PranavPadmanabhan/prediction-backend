@@ -1,15 +1,26 @@
 const router = require("express").Router();
 const { getPredictionContract } = require("../utils/helper-functions");
-var CryptoJS = require("crypto-js");
+
+var ne = require("node-encrypt");
 
 router.get("/", async (req, res) => {
-  var ciphertext = CryptoJS.AES.encrypt(
-    process.env.CONTRACT_ADDRESS,
-    process.env.ENCRYPTION_KEY
-  ).toString();
-  console.log(ciphertext);
-
-  // var bytes = CryptoJS.AES.decrypt(ciphertext, process.env);
+  ne.encrypt(
+    { text: process.env.GOERLI_RPC_URL, key: process.env.ENCRYPTION_KEY },
+    (err, ciphertext) => {
+      if (err) return err;
+      console.log(ciphertext);
+    }
+  );
+  // ne.decrypt(
+  //   {
+  //     cipher: process.env.GOERLI_RPC_URL_ENCRYPTED,
+  //     key: process.env.ENCRYPTION_KEY,
+  //   },
+  //   (err, plaintext) => {
+  //     console.log(plaintext);
+  //   }
+  // );
+  // // var bytes = CryptoJS.AES.decrypt(ciphertext, process.env);
   // var originalText = bytes.toString(CryptoJS.enc.Utf8);
   // console.log(originalText);
 

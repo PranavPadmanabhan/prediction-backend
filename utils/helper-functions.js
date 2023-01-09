@@ -1,14 +1,22 @@
 const ethers = require("ethers");
 const { contractAddress, ABI } = require("../constants/constants");
 const dotenv = require("dotenv");
-var CryptoJS = require("crypto-js");
+var ne = require("node-encrypt");
 
 dotenv.config();
 
 const decrypt = (value) => {
-  var bytes = CryptoJS.AES.decrypt(value, process.env.ENCRYPTION_KEY);
-  var originalText = bytes.toString(CryptoJS.enc.Utf8);
-  return originalText;
+  let data;
+  ne.decrypt(
+    {
+      cipher: value,
+      key: process.env.ENCRYPTION_KEY,
+    },
+    (err, plaintext) => {
+      data = plaintext;
+    }
+  );
+  return data;
 };
 
 const getPredictionContract = async (signerRequired = false) => {
