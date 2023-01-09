@@ -27,7 +27,9 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "encrypt-decrypt-library": "^1.0.5",
     "ethers": "^5.7.2",
-    "http": "^0.0.1-security"
+    "http": "^0.0.1-security",
+    "node-encrypt": "^1.1.0"
   }
 }
