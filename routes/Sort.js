@@ -95,7 +95,7 @@ router.get("/", async (req, res) => {
         rewardList,
         req.query.contestId,
         {
-          gasLimit: 10000000,
+          gasLimit: 250000,
         }
       );
       const rec = await tx.wait(1);
