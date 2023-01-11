@@ -1,38 +1,23 @@
 const ethers = require("ethers");
 const { contractAddress, ABI, array } = require("../constants/constants");
 const dotenv = require("dotenv");
-var ne = require("node-encrypt");
 
 dotenv.config();
 
-const decrypt = (value) => {
-  let data;
-  ne.decrypt(
-    {
-      cipher: value,
-      key: process.env.ENCRYPTION_KEY,
-    },
-    (err, plaintext) => {
-      data = plaintext;
-    }
-  );
-  return data;
-};
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS_ENCRYPTED;
+const PRIVATE_KEY = process.env.PRIVATE_KEY_ENCRYPTED;
+const GOERLI_RPC_URL = process.env.GOERLI_RPC_URL_ENCRYPTED;
 
 const getPredictionContract = async (signerRequired = false) => {
   // console.log(contractAddress[ch ainId]);
-  const CONTRACT_ADDRESS = decrypt(process.env.CONTRACT_ADDRESS_ENCRYPTED);
-  const PRIVATE_KEY = decrypt(process.env.PRIVATE_KEY_ENCRYPTED);
-  const GOERLI_RPC_URL = decrypt(process.env.GOERLI_RPC_URL_ENCRYPTED);
-  const provider = new ethers.providers.WebSocketProvider(GOERLI_RPC_URL);
 
+  const provider = new ethers.providers.WebSocketProvider(GOERLI_RPC_URL);
   if (signerRequired) {
     const signer = new ethers.Wallet(PRIVATE_KEY, provider);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     return contract;
   } else {
     const signer = new ethers.Wallet(PRIVATE_KEY, provider);
-
     const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
     return contract;
   }

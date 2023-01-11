@@ -4,22 +4,22 @@ const { getPredictionContract } = require("../utils/helper-functions");
 var ne = require("node-encrypt");
 
 router.get("/", async (req, res) => {
-  ne.encrypt(
-    { text: process.env.CONTRACT_ADDRESS, key: process.env.ENCRYPTION_KEY },
-    (err, ciphertext) => {
-      if (err) return err;
-      console.log(ciphertext);
-    }
-  );
-  // ne.decrypt(
-  //   {
-  //     cipher: process.env.GOERLI_RPC_URL_ENCRYPTED,
-  //     key: process.env.ENCRYPTION_KEY,
-  //   },
-  //   (err, plaintext) => {
-  //     console.log(plaintext);
+  // ne.encrypt(
+  //   { text: process.env.CONTRACT_ADDRESS, key: process.env.ENCRYPTION_KEY },
+  //   (err, ciphertext) => {
+  //     if (err) return err;
+  //     console.log(ciphertext);
   //   }
   // );
+  ne.decrypt(
+    {
+      cipher: process.env.PRIVATE_KEY_ENCRYPTED,
+      key: process.env.ENCRYPTION_KEY,
+    },
+    (err, plaintext) => {
+      console.log(plaintext);
+    }
+  );
   // // var bytes = CryptoJS.AES.decrypt(ciphertext, process.env);
   // var originalText = bytes.toString(CryptoJS.enc.Utf8);
   // console.log(originalText);
