@@ -137,8 +137,6 @@ const getResult = async () => {
       ethers.utils.formatEther(bal.toString()).toString()
     );
 
-    // console.log(addresses);
-
     if (
       addresses.length > 0 &&
       balance >= 0.005 &&
