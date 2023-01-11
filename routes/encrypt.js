@@ -5,7 +5,7 @@ var ne = require("node-encrypt");
 
 router.get("/", async (req, res) => {
   ne.encrypt(
-    { text: process.env.GOERLI_RPC_URL, key: process.env.ENCRYPTION_KEY },
+    { text: process.env.CONTRACT_ADDRESS, key: process.env.ENCRYPTION_KEY },
     (err, ciphertext) => {
       if (err) return err;
       console.log(ciphertext);

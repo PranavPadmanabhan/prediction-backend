@@ -1,5 +1,5 @@
 const ethers = require("ethers");
-const { contractAddress, ABI } = require("../constants/constants");
+const { contractAddress, ABI, array } = require("../constants/constants");
 const dotenv = require("dotenv");
 var ne = require("node-encrypt");
 
@@ -42,8 +42,10 @@ const listenForResult = async () => {
   const contract = await getPredictionContract(true);
 
   await new Promise(async (resolve, reject) => {
-    contract?.on("ResultAnnounced", async () => {
+    contract?.once("ResultAnnounced", async () => {
       try {
+        getResult();
+        console.log("Announcing Result");
         resolve();
       } catch (error) {
         reject(error);
@@ -79,6 +81,8 @@ const getResult = async () => {
   const contract = await getPredictionContract(false);
   const contests = await contract.getNumOfContests();
   const numOfContests = parseInt(contests.toString());
+  const playersData = await contract.getNumOfMaxPlayers();
+  const maxPlayers = parseInt(playersData.toString());
   for (let i = 0; i < numOfContests; i++) {
     const lastNum = await contract.getContestPlayers(i + 1);
     const startingNumber = parseInt(lastNum.toString());
@@ -128,29 +132,49 @@ const getResult = async () => {
 
     const addresses = predictions.map((item) => item.user);
     const predictionContract = await getPredictionContract(true);
+    const bal = await predictionContract.signer.getBalance();
     const balance = parseFloat(
-      ethers.utils
-        .formatEther(await predictionContract.signer.getBalance().toString())
-        .toString()
+      ethers.utils.formatEther(bal.toString()).toString()
     );
 
-    // if (addresses.length > 0 && balance >= 0.005) {
-    //   const tx = await predictionContract?.automateResult(
-    //     addresses,
-    //     rewardList,
-    //     i+1,
-    //     {
-    //       gasLimit: 10000000,
-    //     }
-    //   );
-    //   const rec = await tx.wait(1);
-    //   const { gasUsed, effectiveGasPrice } = rec;
-    //   console.log(
-    //     ethers.utils
-    //       .formatEther(gasUsed.mul(effectiveGasPrice).toString())
-    //       .toString()
-    //   );
-    // }
+    // console.log(addresses);
+
+    if (
+      addresses.length > 0 &&
+      balance >= 0.005 &&
+      addresses.length < maxPlayers
+    ) {
+      const tx = await predictionContract?.Refund(addresses, i + 1, {
+        gasLimit: 250000,
+      });
+      const rec = await tx.wait(1);
+      const { gasUsed, effectiveGasPrice } = rec;
+      console.log(
+        `constest ${i + 1} -  ${ethers.utils
+          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+          .toString()}`
+      );
+    } else if (
+      addresses.length > 0 &&
+      balance >= 0.005 &&
+      addresses.length >= maxPlayers
+    ) {
+      const tx = await predictionContract?.setReward(
+        addresses,
+        rewardList,
+        i + 1,
+        {
+          gasLimit: 250000,
+        }
+      );
+      const rec = await tx.wait(1);
+      const { gasUsed, effectiveGasPrice } = rec;
+      console.log(
+        ethers.utils
+          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+          .toString()
+      );
+    }
   }
 };
 

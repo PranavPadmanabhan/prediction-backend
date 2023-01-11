@@ -8,6 +8,8 @@ const Sort = require("./routes/Sort");
 const contest = require("./routes/getContests");
 // const Price = require("./routes/LatestPrice");
 const encrypt = require("./routes/encrypt");
+const getTime = require("./routes/getLatestStamp");
+const { listenForResult } = require("./utils/helper-functions");
 
 const http = require("http");
 const { default: mongoose } = require("mongoose");
@@ -39,6 +41,7 @@ app.use("/getResult", Sort);
 // app.use("/latestPrice", Price);
 app.use("/encrypt", encrypt);
 app.use("/getContests", contest);
+app.use("/getLatestTime", getTime);
 
 /// listening to changes
 
@@ -53,4 +56,5 @@ server.listen(PORT, async () => {
   //     console.log("MongoDb connection successfull");
   //   })
   //   .catch((err) => console.log(err));
+  listenForResult();
 });

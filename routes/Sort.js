@@ -36,6 +36,8 @@ router.get("/", async (req, res) => {
   const lastNum = await contract.getContestPlayers(req.query.contestId);
   const startingNumber = parseInt(lastNum.toString());
   const priceData = await contract.getLatestPrice(req.query.contestId);
+  const playersData = await contract.getNumOfMaxPlayers();
+  const maxPlayers = parseInt(playersData.toString());
   const currentPrice =
     parseInt(priceData[0].toString()) / 10 ** parseInt(priceData[1].toString());
   if (req.query.contestId) {
@@ -89,8 +91,31 @@ router.get("/", async (req, res) => {
         .toString()
     );
 
-    if (addresses.length > 0 && balance >= 0.005) {
-      const tx = await predictionContract?.automateResult(
+    if (
+      addresses.length > 0 &&
+      balance >= 0.005 &&
+      addresses.length < maxPlayers
+    ) {
+      const tx = await predictionContract?.Refund(
+        addresses,
+        req.query.contestId,
+        {
+          gasLimit: 250000,
+        }
+      );
+      const rec = await tx.wait(1);
+      const { gasUsed, effectiveGasPrice } = rec;
+      console.log(
+        `constest ${req.query.contestId} -  ${ethers.utils
+          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+          .toString()}`
+      );
+    } else if (
+      addresses.length > 0 &&
+      balance >= 0.005 &&
+      addresses.length >= maxPlayers
+    ) {
+      const tx = await predictionContract?.setReward(
         addresses,
         rewardList,
         req.query.contestId,
@@ -106,7 +131,8 @@ router.get("/", async (req, res) => {
           .toString()
       );
     }
-
+    // console.log(addresses);
+    // console.log(addresses.length);
     res
       .status(200)
       .json({ results: predictions, rewards: rewardList, currentPrice });
