@@ -27,7 +27,7 @@ const listenForResult = async () => {
   const contract = await getPredictionContract(true);
 
   await new Promise(async (resolve, reject) => {
-    contract?.once("ResultAnnounced", async () => {
+    contract?.on("ResultAnnounced", async () => {
       try {
         getResult();
         console.log("Announcing Result");
