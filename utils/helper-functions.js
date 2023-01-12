@@ -128,7 +128,7 @@ const getResult = async () => {
       addresses.length < maxPlayers
     ) {
       const tx = await predictionContract?.Refund(addresses, i + 1, {
-        gasLimit: 250000,
+        gasLimit: 500000,
       });
       const rec = await tx.wait(1);
       const { gasUsed, effectiveGasPrice } = rec;
@@ -147,7 +147,7 @@ const getResult = async () => {
         rewardList,
         i + 1,
         {
-          gasLimit: 250000,
+          gasLimit: 500000,
         }
       );
       const rec = await tx.wait(1);
@@ -159,6 +159,7 @@ const getResult = async () => {
       );
     }
   }
+  console.log("result published..");
 };
 
 module.exports = {
