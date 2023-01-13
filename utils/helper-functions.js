@@ -30,9 +30,8 @@ const listenForResult = async () => {
     try {
       getResult();
       console.log("Announcing Result");
-      resolve();
     } catch (error) {
-      reject(error);
+      console.error(error);
     }
   });
 };
