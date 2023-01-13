@@ -26,16 +26,14 @@ const getPredictionContract = async (signerRequired = false) => {
 const listenForResult = async () => {
   const contract = await getPredictionContract(true);
 
-  await new Promise(async (resolve, reject) => {
-    contract?.on("ResultAnnounced", async () => {
-      try {
-        getResult();
-        console.log("Announcing Result");
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
+  contract?.on("ResultAnnounced", async () => {
+    try {
+      getResult();
+      console.log("Announcing Result");
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
