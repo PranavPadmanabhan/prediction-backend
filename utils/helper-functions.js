@@ -140,7 +140,7 @@ const getResult = async () => {
         balance >= 0.005 &&
         addresses.length < maxPlayers
       ) {
-        const tx = await predictionContract?.Refund(addressList[j], i + 1, {
+        const tx = await predictionContract?.Refund(addressList[j], {
           gasLimit: 500000,
         });
         const rec = await tx.wait(1);
@@ -158,7 +158,6 @@ const getResult = async () => {
         const tx = await predictionContract?.setReward(
           addressList[j],
           rewardArrayList[j],
-          i + 1,
           {
             gasLimit: 500000,
           }
