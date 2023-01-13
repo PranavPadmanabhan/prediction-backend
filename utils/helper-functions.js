@@ -112,49 +112,68 @@ const getResult = async () => {
       }
     });
 
+    let addressList = [];
+    let rewardArrayList = [];
+
     const addresses = predictions.map((item) => item.user);
+
+    const limit = 500;
+    for (let i = 0; i < addresses.length; i += limit) {
+      const divided = addresses.slice(i, i + limit);
+      addressList.push(divided);
+    }
+
+    for (let i = 0; i < rewardList.length; i += limit) {
+      const divided = rewardList.slice(i, i + limit);
+      rewardArrayList.push(divided);
+    }
+
     const predictionContract = await getPredictionContract(true);
     const bal = await predictionContract.signer.getBalance();
     const balance = parseFloat(
       ethers.utils.formatEther(bal.toString()).toString()
     );
 
-    if (
-      addresses.length > 0 &&
-      balance >= 0.005 &&
-      addresses.length < maxPlayers
-    ) {
-      const tx = await predictionContract?.Refund(addresses, i + 1, {
-        gasLimit: 500000,
-      });
-      const rec = await tx.wait(1);
-      const { gasUsed, effectiveGasPrice } = rec;
-      console.log(
-        `constest ${i + 1} -  ${ethers.utils
-          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
-          .toString()}`
-      );
-    } else if (
-      addresses.length > 0 &&
-      balance >= 0.005 &&
-      addresses.length >= maxPlayers
-    ) {
-      const tx = await predictionContract?.setReward(
-        addresses,
-        rewardList,
-        i + 1,
-        {
+    for (let j = 0; j < addressList.length; j++) {
+      if (
+        addresses.length > 0 &&
+        balance >= 0.005 &&
+        addresses.length < maxPlayers
+      ) {
+        const tx = await predictionContract?.Refund(addressList[j], i + 1, {
           gasLimit: 500000,
-        }
-      );
-      const rec = await tx.wait(1);
-      const { gasUsed, effectiveGasPrice } = rec;
-      console.log(
-        ethers.utils
-          .formatEther(gasUsed.mul(effectiveGasPrice).toString())
-          .toString()
-      );
+        });
+        const rec = await tx.wait(1);
+        const { gasUsed, effectiveGasPrice } = rec;
+        console.log(
+          `group - ${j + 1} transaction -  ${ethers.utils
+            .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+            .toString()}`
+        );
+      } else if (
+        addresses.length > 0 &&
+        balance >= 0.005 &&
+        addresses.length >= maxPlayers
+      ) {
+        const tx = await predictionContract?.setReward(
+          addressList[j],
+          rewardArrayList[j],
+          i + 1,
+          {
+            gasLimit: 500000,
+          }
+        );
+        const rec = await tx.wait(1);
+        const { gasUsed, effectiveGasPrice } = rec;
+        console.log(
+          ethers.utils
+            .formatEther(gasUsed.mul(effectiveGasPrice).toString())
+            .toString()
+        );
+      }
     }
+
+    await predictionContract.declareCompletetion(i + 1);
   }
   console.log("result published..");
 };
