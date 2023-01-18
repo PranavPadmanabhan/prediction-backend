@@ -4,7 +4,10 @@ const dotenv = require("dotenv");
 const session = require("express-session");
 const cors = require("cors");
 const predictionRoute = require("./routes/Predictions");
-const { listenForResult } = require("./utils/helper-functions");
+const {
+  listenForResult,
+  checkResultStatus,
+} = require("./utils/helper-functions");
 
 dotenv.config();
 
@@ -36,4 +39,5 @@ app.use("/predictions", predictionRoute);
 server.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
   listenForResult();
+  checkResultStatus();
 });
