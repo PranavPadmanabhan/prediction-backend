@@ -340,4 +340,5 @@ module.exports = {
   listenForResult,
   checkResultStatus,
   setRewardArray,
+  getResult,
 };
