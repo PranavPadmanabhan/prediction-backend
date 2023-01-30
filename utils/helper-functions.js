@@ -324,7 +324,7 @@ const checkResultStatus = async () => {
     var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     var seconds = Math.floor((distance % (1000 * 60)) / 1000);
     var sec = seconds < 10 ? "0" + seconds : seconds;
-    console.log(hours + ":" + minutes + ":" + sec);
+    // console.log(hours + ":" + minutes + ":" + sec);
     if (distance <= 0) {
       const predictionContract = await getPredictionContract(true);
       // clearInterval(x);

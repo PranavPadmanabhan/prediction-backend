@@ -40,6 +40,6 @@ app.use("/predictions", predictionRoute);
 server.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
   listenForResult();
-  // checkResultStatus();
+  checkResultStatus();
   setRewardArray();
 });
