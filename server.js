@@ -41,7 +41,7 @@ app.use("/result", ResultRoute);
 
 server.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  listenForResult();
-  // checkResultStatus();
+  // listenForResult();
+  checkResultStatus();
   setRewardArray();
 });
