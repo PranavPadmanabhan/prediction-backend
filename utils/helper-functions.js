@@ -1,5 +1,11 @@
 const ethers = require("ethers");
-const { contractAddress, ABI, array } = require("../constants/constants");
+const {
+  contractAddress,
+  ABI,
+  rewardsForFirst,
+  rewardsForSecond,
+  rewardsForThird,
+} = require("../constants/constants");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -37,41 +43,140 @@ const listenForResult = async () => {
 };
 
 let rewardList = [];
+let rewardArrayList1 = [];
+let rewardArrayList2 = [];
+let rewardArrayList3 = [];
 
-function setRewardArray() {
+function setRewardArray(fee) {
   for (let i = 0; i < 100; i++) {
     if (i < 3) {
-      rewardList.push(ethers.utils.parseEther(array[i].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[i].toString())
+      );
     } else if (i >= 3 && i < 6) {
-      rewardList.push(ethers.utils.parseEther(array[3].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[3].toString())
+      );
     } else if (i >= 7 && i < 10) {
-      rewardList.push(ethers.utils.parseEther(array[4].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[4].toString())
+      );
     } else if (i >= 10 && i < 15) {
-      rewardList.push(ethers.utils.parseEther(array[5].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[5].toString())
+      );
     } else if (i >= 16 && i < 25) {
-      rewardList.push(ethers.utils.parseEther(array[6].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[6].toString())
+      );
     } else if (i >= 26 && i < 50) {
-      rewardList.push(ethers.utils.parseEther(array[7].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[7].toString())
+      );
     } else {
-      rewardList.push(ethers.utils.parseEther(array[8].toString()));
+      rewardArrayList1.push(
+        ethers.utils.parseEther(rewardsForFirst[8].toString())
+      );
+    }
+  }
+  for (let i = 0; i < 100; i++) {
+    if (i < 3) {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[i].toString())
+      );
+    } else if (i >= 3 && i < 6) {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[3].toString())
+      );
+    } else if (i >= 7 && i < 10) {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[4].toString())
+      );
+    } else if (i >= 10 && i < 15) {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[5].toString())
+      );
+    } else if (i >= 16 && i < 25) {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[6].toString())
+      );
+    } else if (i >= 26 && i < 50) {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[7].toString())
+      );
+    } else {
+      rewardArrayList2.push(
+        ethers.utils.parseEther(rewardsForSecond[8].toString())
+      );
+    }
+  }
+
+  for (let i = 0; i < 100; i++) {
+    if (i < 3) {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[i].toString())
+      );
+    } else if (i >= 3 && i < 6) {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[3].toString())
+      );
+    } else if (i >= 7 && i < 10) {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[4].toString())
+      );
+    } else if (i >= 10 && i < 15) {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[5].toString())
+      );
+    } else if (i >= 16 && i < 25) {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[6].toString())
+      );
+    } else if (i >= 26 && i < 50) {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[7].toString())
+      );
+    } else {
+      rewardArrayList3.push(
+        ethers.utils.parseEther(rewardsForThird[8].toString())
+      );
     }
   }
 }
 
+const getRewardArray = (fee) => {
+  switch (fee) {
+    case 0.0005:
+      rewardList = rewardArrayList1;
+      break;
+    case 0.00075:
+      rewardList = rewardArrayList2;
+      break;
+    case 0.001:
+      rewardList = rewardArrayList3;
+      break;
+    default:
+      rewardList = rewardArrayList1;
+      break;
+  }
+};
+
 const getResult = async () => {
-  setRewardArray();
   const contract = await getPredictionContract(false);
   const contests = await contract.getNumOfContests();
   const numOfContests = parseInt(contests.toString());
   const playersData = await contract.getNumOfMaxPlayers();
   const maxPlayers = parseInt(playersData.toString());
   for (let i = 0; i < numOfContests; i++) {
+    const contest = await contract?.getContest(i + 1);
+    const entranceFee = parseFloat(
+      ethers.utils.formatEther(contest.entranceFee.toString()).toString()
+    );
+    getRewardArray(entranceFee);
     const lastNum = await contract.getContestPlayers(i + 1);
     const startingNumber = parseInt(lastNum.toString());
     const priceData = await contract.getLatestPrice(i + 1);
-    const currentPrice =
-      parseInt(priceData[0].toString()) /
-      10 ** parseInt(priceData[1].toString());
+    const currentPrice = parseInt(priceData[0].toString());
     const data = await contract.getPredictions(i + 1);
     let predictions = data.map((item) => ({
       predictedValue: parseFloat(item.predictedValue.toString()),
@@ -161,7 +266,7 @@ const getResult = async () => {
           balance >= 0.005 &&
           addresses.length < maxPlayers
         ) {
-          const tx = await predictionContract?.Refund(addressList[j], {
+          const tx = await predictionContract?.Refund(i + 1, addressList[j], {
             gasLimit: 500000,
           });
           const rec = await tx.wait(1);
@@ -234,4 +339,5 @@ module.exports = {
   getPredictionContract,
   listenForResult,
   checkResultStatus,
+  setRewardArray,
 };
