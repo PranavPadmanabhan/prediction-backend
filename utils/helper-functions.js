@@ -201,7 +201,7 @@ const getResult = async () => {
       const predictionContract = await getPredictionContract(true)
       for (let j = 0; j < addressesListForRefund.length; j++) {
         const tx = await predictionContract?.Refund(addressesListForRefund[j], {
-          gasLimit: 500000,
+          gasLimit: 1500000,
         });
         const rec = await tx.wait(1);
         const { gasUsed, effectiveGasPrice } = rec;
@@ -267,7 +267,7 @@ const getResult = async () => {
           addresses.length < maxPlayers
         ) {
           const tx = await predictionContract?.Refund(i + 1, addressList[j], {
-            gasLimit: 500000,
+            gasLimit: 1500000,
           });
           const rec = await tx.wait(1);
           const { gasUsed, effectiveGasPrice } = rec;
@@ -285,19 +285,24 @@ const getResult = async () => {
             addressList[j],
             rewardArrayList[j],
             {
-              gasLimit: 500000,
+              gasLimit: 2500000,
             }
           );
-          await predictionContract?.updateWinnerList(addressList[j], i + 1, {
+          const receipt = await tx.wait(1)
+          const { gasUsed:gas  } = receipt;
+          
+         if(gas){
+          const tx1= await predictionContract?.updateWinnerList(addressList[j], i + 1, {
             gasLimit: 500000,
           });
-          const rec = await tx.wait(1);
+          const rec = await tx1.wait(1);
           const { gasUsed, effectiveGasPrice } = rec;
           console.log(
             ethers.utils
               .formatEther(gasUsed.mul(effectiveGasPrice).toString())
               .toString()
           );
+         }
         }
       }
 
@@ -308,33 +313,31 @@ const getResult = async () => {
 };
 
 const checkResultStatus = async () => {
-  const contract = await getPredictionContract(false);
-  const interval = await contract?.getInterval();
-  let expire;
-    let lastTime = await contract?.getLatestTimeStamp();
-    let timeStamp = parseInt(lastTime.add(interval).toString());
-    let date = timeStamp + 120;
-    expire = new Date(date * 1000).getTime();
-    let now = new Date().getTime();
-    let distance = expire - now;
-    var hours = Math.floor(
-      (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
-    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    var sec = seconds < 10 ? "0" + seconds : seconds;
-    console.log(hours + ":" + minutes + ":" + sec);
-    if (distance <= 5) {
-      const predictionContract = await getPredictionContract(true);
-      // clearInterval(x);
-      const tx = await predictionContract?.updateTimeStamp();
-      await tx.wait(1);
-      lastTime = await predictionContract?.getLatestTimeStamp();
-    }
-
-    setTimeout(() => {
-      checkResultStatus()
-    }, 60000);
+  setInterval(async() => {
+    const contract = await getPredictionContract(false);
+    const interval = await contract?.getInterval();
+    let expire;
+      let lastTime = await contract?.getLatestTimeStamp();
+      let timeStamp = parseInt(lastTime.add(interval).toString());
+      let date = timeStamp + 120;
+      expire = new Date(date * 1000).getTime();
+      let now = new Date().getTime();
+      let distance = expire - now;
+      var hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      var sec = seconds < 10 ? "0" + seconds : seconds;
+      console.log(hours + ":" + minutes + ":" + sec);
+      if (distance <= 5) {
+        const predictionContract = await getPredictionContract(true);
+        // clearInterval(x);
+        const tx = await predictionContract?.updateTimeStamp();
+        await tx.wait(1);
+        lastTime = await predictionContract?.getLatestTimeStamp();
+      }
+  }, 300000);
 };
 
 module.exports = {
