@@ -313,6 +313,7 @@ const getResult = async () => {
 };
 
 const checkResultStatus = async () => {
+  console.log("Checking result Status");
   setInterval(async() => {
     const contract = await getPredictionContract(false);
     const interval = await contract?.getInterval();
